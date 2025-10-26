@@ -36,5 +36,5 @@ RUN mkdir -p /app/media
 # Expose port
 EXPOSE 8000
 
-# Run migrations and start server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Run with ALLOWED_HOSTS patch and start server
+CMD sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = ['*']/" Exchange/settings.py && python manage.py runserver 0.0.0.0:8000
