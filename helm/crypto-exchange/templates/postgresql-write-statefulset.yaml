@@ -46,8 +46,10 @@ spec:
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         volumeMounts:
+        {{- if .Values.postgresql.write.persistence.enabled }}
         - name: data
           mountPath: /var/lib/postgresql/data
+        {{- end }}
         - name: config
           mountPath: /docker-entrypoint-initdb.d/
         livenessProbe:
@@ -73,6 +75,10 @@ spec:
         resources:
           {{- toYaml .Values.postgresql.write.resources | nindent 10 }}
       volumes:
+      {{- if not .Values.postgresql.write.persistence.enabled }}
+      - name: data
+        emptyDir: {}
+      {{- end }}
       - name: config
         configMap:
           name: {{ include "crypto-exchange.fullname" . }}-postgresql-config

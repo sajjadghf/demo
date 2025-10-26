@@ -46,8 +46,10 @@ spec:
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         volumeMounts:
+        {{- if .Values.postgresql.read.persistence.enabled }}
         - name: data
           mountPath: /var/lib/postgresql/data
+        {{- end }}
         livenessProbe:
           exec:
             command:
@@ -70,6 +72,11 @@ spec:
           failureThreshold: 6
         resources:
           {{- toYaml .Values.postgresql.read.resources | nindent 10 }}
+      {{- if not .Values.postgresql.read.persistence.enabled }}
+      volumes:
+      - name: data
+        emptyDir: {}
+      {{- end }}
   {{- if .Values.postgresql.read.persistence.enabled }}
   volumeClaimTemplates:
   - metadata:
