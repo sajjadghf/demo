@@ -37,8 +37,8 @@ resources:
     cpu: 1000m
     memory: 1Gi
   requests:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 10m
+    memory: 100Mi
 
 # Django Application Settings
 django:
@@ -64,8 +64,8 @@ postgresql:
         cpu: 1000m
         memory: 1Gi
       requests:
-        cpu: 500m
-        memory: 512Mi
+        cpu: 10m
+        memory: 100Mi
     database: crypto_exchange
     username: exchange_user
     # Password should be provided via secret or values override
@@ -85,11 +85,11 @@ postgresql:
       storageClass: ""
     resources:
       limits:
-        cpu: 500m
-        memory: 512Mi
+        cpu: 10m
+        memory: 100Mi
       requests:
-        cpu: 250m
-        memory: 256Mi
+        cpu: 10m
+        memory: 100Mi
     port: 5432
 
 # Persistence for media files
