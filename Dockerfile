@@ -19,8 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY CryptoCurrencyExchange/Exchange /app/
+# Copy application code (from submodule)
+COPY ./CryptoCurrencyExchange/Exchange/ /app/
 
 # Create media directory
 RUN mkdir -p /app/media
