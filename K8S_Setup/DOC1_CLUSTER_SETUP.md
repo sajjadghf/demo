@@ -190,6 +190,30 @@ kubectl -n elastic-stack port-forward svc/elk-kibana 5601:5601
 
 ---
 
+## 7) GitHub Actions runner on `arvan-k8s-m1`
+
+To allow GitHub Actions jobs to target the control-plane node, I stood up a self-hosted runner under the default runner group:
+
+```bash
+mkdir actions-runner && cd actions-runner
+
+curl -o actions-runner-linux-x64-2.329.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.329.0/actions-runner-linux-x64-2.329.0.tar.gz
+echo "194f1e1e4bd02f80b7e9633fc546084d8d4e19f3928a324d512ea53430102e1d  actions-runner-linux-x64-2.329.0.tar.gz" | shasum -a 256 -c
+tar xzf ./actions-runner-linux-x64-2.329.0.tar.gz
+
+./config.sh --url https://github.com/sajjadghf/demo --token ***REDACTED***
+```
+
+```bash
+./run.sh
+
+√ Connected to GitHub
+Current runner version: '2.329.0'
+2025-10-26 19:44:30Z: Listening for Jobs
+```
+
+---
+
 ## Command History (as executed)
 
 ```bash
