@@ -19,6 +19,46 @@ spec:
         {{- include "crypto-exchange.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: postgresql-read
     spec:
+      initContainers:
+      - name: init-replica
+        image: "{{ .Values.postgresql.read.image.repository }}:{{ .Values.postgresql.read.image.tag }}"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          if [ -f /var/lib/postgresql/data/pgdata/PG_VERSION ]; then
+            echo "Data directory exists, skipping basebackup"
+            exit 0
+          fi
+          
+          echo "Waiting for primary to be ready..."
+          until pg_isready -h {{ include "crypto-exchange.postgresql.write.fullname" . }}-0.{{ include "crypto-exchange.postgresql.write.fullname" . }} -U {{ .Values.postgresql.write.username }}; do
+            echo "Waiting..."
+            sleep 2
+          done
+          
+          echo "Creating base backup from primary..."
+          mkdir -p /var/lib/postgresql/data/pgdata
+          pg_basebackup -h {{ include "crypto-exchange.postgresql.write.fullname" . }}-0.{{ include "crypto-exchange.postgresql.write.fullname" . }} \
+                        -D /var/lib/postgresql/data/pgdata \
+                        -U {{ .Values.postgresql.write.username }} \
+                        -v -P -R
+          
+          echo "Base backup complete"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_PASSWORD
+        volumeMounts:
+        {{- if .Values.postgresql.read.persistence.enabled }}
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        {{- else }}
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        {{- end }}
       containers:
       - name: postgresql
         image: "{{ .Values.postgresql.read.image.repository }}:{{ .Values.postgresql.read.image.tag }}"

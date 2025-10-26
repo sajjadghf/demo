@@ -1,17 +1,49 @@
+{{- if .Values.postgresql.write.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "crypto-exchange.fullname" . }}-postgresql-config
   labels:
     {{- include "crypto-exchange.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-config
 data:
-  setup-replication.sh: |
+  init-replication.sh: |
     #!/bin/bash
     set -e
     
-    # This script would typically set up PostgreSQL replication
-    # For production, you would configure streaming replication
-    # This is a placeholder for the actual replication setup
+    # Only configure replication if read replicas are enabled
+    {{- if .Values.postgresql.read.enabled }}
+    echo "Configuring PostgreSQL for replication..."
     
-    echo "PostgreSQL replication setup placeholder"
-    echo "Configure streaming replication in production"
+    # Create replication user
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        DO \$\$
+        BEGIN
+            IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'replicator') THEN
+                CREATE ROLE replicator WITH REPLICATION PASSWORD '$POSTGRES_PASSWORD' LOGIN;
+            END IF;
+        END
+        \$\$;
+    EOSQL
+    
+    # Configure pg_hba.conf for replication
+    cat >> ${PGDATA}/pg_hba.conf <<-EOF
+    # Allow replication connections
+    host replication replicator 0.0.0.0/0 md5
+    EOF
+    
+    # Configure postgresql.conf for replication
+    cat >> ${PGDATA}/postgresql.conf <<-EOF
+    # Replication settings
+    wal_level = replica
+    max_wal_senders = 10
+    wal_keep_size = 512
+    hot_standby = on
+    EOF
+    
+    echo "Replication configuration complete. Reloading PostgreSQL..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "SELECT pg_reload_conf();"
+    {{- else }}
+    echo "Read replicas disabled. Skipping replication configuration."
+    {{- end }}
+{{- end }}

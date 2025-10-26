@@ -85,12 +85,37 @@ postgresql:
       storageClass: ""
     resources:
       limits:
-        cpu: 10m
-        memory: 100Mi
+        cpu: 1000m
+        memory: 1Gi
       requests:
         cpu: 10m
         memory: 100Mi
     port: 5432
+
+# Database Backup Configuration
+backup:
+  enabled: true
+  # Cron schedule (default: daily at 2 AM)
+  schedule: "0 2 * * *"
+  # Number of backups to retain
+  retention: 7
+  # Backup storage configuration
+  persistence:
+    enabled: false
+    size: 20Gi
+    storageClass: ""
+  # HostPath configuration (used when persistence is disabled)
+  hostPath: "/var/backups/crypto-exchange"
+  # Job history limits
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 10m
+      memory: 10Mi
 
 # Persistence for media files
 persistence:
