@@ -22,7 +22,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker build -t ghcr.io/${{ github.repository }}:latest .
-          docker push ghcr.io/${{ github.repository }}:latest
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          sudo docker build -t ghcr.io/${{ github.repository }}:latest .
+          sudo docker push ghcr.io/${{ github.repository }}:latest
 
