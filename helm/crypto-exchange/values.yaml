@@ -56,7 +56,7 @@ postgresql:
       repository: postgres
       tag: "15-alpine"
     persistence:
-      enabled: true
+      enabled: false
       size: 10Gi
       storageClass: ""
     resources:
@@ -80,7 +80,7 @@ postgresql:
       repository: postgres
       tag: "15-alpine"
     persistence:
-      enabled: true
+      enabled: false
       size: 10Gi
       storageClass: ""
     resources:
@@ -94,7 +94,7 @@ postgresql:
 
 # Persistence for media files
 persistence:
-  enabled: true
+  enabled: false
   storageClass: ""
   accessMode: ReadWriteMany
   size: 5Gi
