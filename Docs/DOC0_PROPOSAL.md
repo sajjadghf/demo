@@ -19,7 +19,7 @@ Why this set: fastest path to a working, inspectable environment with common bui
 ## High‑Level Architecture
 
 ```
-Users ─────────▶ Internet
+Users ─────────▶ ArvanCloud CDN
                    │
                    ▼
           ┌──────────────────────┐
