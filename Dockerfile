@@ -19,6 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create creditcards compatibility shim (unused import in users/forms.py)
+RUN mkdir -p /usr/local/lib/python3.11/site-packages/creditcards && \
+    echo "from django import forms" > /usr/local/lib/python3.11/site-packages/creditcards/__init__.py && \
+    echo "from django import forms" > /usr/local/lib/python3.11/site-packages/creditcards/models.py && \
+    echo "class CardNumberField(forms.CharField): pass" >> /usr/local/lib/python3.11/site-packages/creditcards/models.py && \
+    echo "class CardExpiryField(forms.CharField): pass" >> /usr/local/lib/python3.11/site-packages/creditcards/models.py && \
+    echo "class SecurityCodeField(forms.CharField): pass" >> /usr/local/lib/python3.11/site-packages/creditcards/models.py
+
 # Copy application code (from submodule)
 COPY ./CryptoCurrencyExchange/Exchange/ /app/
 
