@@ -1,0 +1,50 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Create namespace
+        run: kubectl create namespace crypto-exchange --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create image pull secret
+        run: |
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --namespace=crypto-exchange \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install crypto-exchange ./helm/crypto-exchange \
+            --namespace crypto-exchange \
+            --set image.repository=ghcr.io/${{ github.repository }} \
+            --set image.tag=latest \
+            --set imagePullSecrets[0].name=ghcr-secret \
+            --set django.secretKey="${{ secrets.DJANGO_SECRET_KEY }}" \
+            --set postgresql.write.password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --wait
+
+      - name: Check deployment
+        run: kubectl get pods -n crypto-exchange
+

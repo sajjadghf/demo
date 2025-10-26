@@ -1,0 +1,106 @@
+# Application Configuration
+replicaCount: 1
+
+image:
+  repository: ghcr.io/sajjadghf/crypto-exchange
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: demo.iransre.ir
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Django Application Settings
+django:
+  debug: "False"
+  secretKey: "CHANGE_ME_IN_PRODUCTION"
+  allowedHosts: "demo.iransre.ir"
+
+# PostgreSQL Configuration
+postgresql:
+  # Write instance (master)
+  write:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: postgres
+      tag: "15-alpine"
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    database: crypto_exchange
+    username: exchange_user
+    # Password should be provided via secret or values override
+    password: "CHANGE_ME_IN_PRODUCTION"
+    port: 5432
+
+  # Read replicas
+  read:
+    enabled: true
+    replicaCount: 2
+    image:
+      repository: postgres
+      tag: "15-alpine"
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    port: 5432
+
+# Persistence for media files
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteMany
+  size: 5Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

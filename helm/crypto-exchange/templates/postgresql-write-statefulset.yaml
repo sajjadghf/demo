@@ -1,0 +1,94 @@
+{{- if .Values.postgresql.write.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "crypto-exchange.postgresql.write.fullname" . }}
+  labels:
+    {{- include "crypto-exchange.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-write
+spec:
+  serviceName: {{ include "crypto-exchange.postgresql.write.fullname" . }}
+  replicas: {{ .Values.postgresql.write.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "crypto-exchange.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql-write
+  template:
+    metadata:
+      labels:
+        {{- include "crypto-exchange.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql-write
+    spec:
+      containers:
+      - name: postgresql
+        image: "{{ .Values.postgresql.write.image.repository }}:{{ .Values.postgresql.write.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: postgresql
+          containerPort: {{ .Values.postgresql.write.port }}
+          protocol: TCP
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        - name: config
+          mountPath: /docker-entrypoint-initdb.d/
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U {{ .Values.postgresql.write.username }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U {{ .Values.postgresql.write.username }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        resources:
+          {{- toYaml .Values.postgresql.write.resources | nindent 10 }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "crypto-exchange.fullname" . }}-postgresql-config
+          defaultMode: 0755
+  {{- if .Values.postgresql.write.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      {{- if .Values.postgresql.write.persistence.storageClass }}
+      storageClassName: {{ .Values.postgresql.write.persistence.storageClass }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.postgresql.write.persistence.size }}
+  {{- end }}
+{{- end }}

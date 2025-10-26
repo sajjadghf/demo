@@ -1,0 +1,87 @@
+{{- if .Values.postgresql.read.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "crypto-exchange.postgresql.read.fullname" . }}
+  labels:
+    {{- include "crypto-exchange.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-read
+spec:
+  serviceName: {{ include "crypto-exchange.postgresql.read.fullname" . }}
+  replicas: {{ .Values.postgresql.read.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "crypto-exchange.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: postgresql-read
+  template:
+    metadata:
+      labels:
+        {{- include "crypto-exchange.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: postgresql-read
+    spec:
+      containers:
+      - name: postgresql
+        image: "{{ .Values.postgresql.read.image.repository }}:{{ .Values.postgresql.read.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: postgresql
+          containerPort: {{ .Values.postgresql.read.port }}
+          protocol: TCP
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "crypto-exchange.fullname" . }}-postgresql
+              key: POSTGRES_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U {{ .Values.postgresql.write.username }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U {{ .Values.postgresql.write.username }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        resources:
+          {{- toYaml .Values.postgresql.read.resources | nindent 10 }}
+  {{- if .Values.postgresql.read.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      {{- if .Values.postgresql.read.persistence.storageClass }}
+      storageClassName: {{ .Values.postgresql.read.persistence.storageClass }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.postgresql.read.persistence.size }}
+  {{- end }}
+{{- end }}

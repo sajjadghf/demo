@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "crypto-exchange.fullname" . }}-postgresql-config
+  labels:
+    {{- include "crypto-exchange.labels" . | nindent 4 }}
+data:
+  setup-replication.sh: |
+    #!/bin/bash
+    set -e
+    
+    # This script would typically set up PostgreSQL replication
+    # For production, you would configure streaming replication
+    # This is a placeholder for the actual replication setup
+    
+    echo "PostgreSQL replication setup placeholder"
+    echo "Configure streaming replication in production"

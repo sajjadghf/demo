@@ -1,0 +1,40 @@
+{{- if .Values.postgresql.write.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "crypto-exchange.postgresql.write.fullname" . }}
+  labels:
+    {{- include "crypto-exchange.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-write
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: postgresql
+    port: {{ .Values.postgresql.write.port }}
+    targetPort: postgresql
+    protocol: TCP
+  selector:
+    {{- include "crypto-exchange.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-write
+{{- end }}
+---
+{{- if .Values.postgresql.read.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "crypto-exchange.postgresql.read.fullname" . }}
+  labels:
+    {{- include "crypto-exchange.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-read
+spec:
+  type: ClusterIP
+  ports:
+  - name: postgresql
+    port: {{ .Values.postgresql.read.port }}
+    targetPort: postgresql
+    protocol: TCP
+  selector:
+    {{- include "crypto-exchange.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-read
+{{- end }}
