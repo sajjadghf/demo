@@ -2,9 +2,9 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/sajjadghf/crypto-exchange
-  pullPolicy: IfNotPresent
-  tag: "latest"
+  repository: ghcr.io/sajjadghf/demo
+  pullPolicy: Always
+  tag: "main"
 
 imagePullSecrets: []
 nameOverride: ""
