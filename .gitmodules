@@ -1,0 +1,3 @@
+[submodule "CryptoCurrencyExchange"]
+	path = CryptoCurrencyExchange
+	url = https://github.com/MGasiorowskii/CryptoCurrencyExchange.git
