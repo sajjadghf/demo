@@ -44,7 +44,7 @@ resources:
 django:
   debug: "False"
   secretKey: "CHANGE_ME_IN_PRODUCTION"
-  allowedHosts: "demo.iransre.ir"
+  allowedHosts: "*"
 
 # PostgreSQL Configuration
 postgresql:
